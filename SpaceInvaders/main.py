@@ -6,7 +6,7 @@ from random import randint
 
 class GameSprite(pygame.sprite.Sprite):
     """Main class for sprites"""
-    def __init__(self, player_image, player_x, player_y, width, height, speed):  # Initialization
+    def __init__(self, window, player_image, player_x, player_y, width, height, speed):  # Initialization
         pygame.sprite.Sprite.__init__(self)
 
         self.image = pygame.transform.scale(pygame.image.load(
