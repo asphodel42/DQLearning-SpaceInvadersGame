@@ -78,13 +78,9 @@ class Alien(GameSprite):
             missed_aliens += 1
         return missed_aliens
 
-    def collissionShip(self, ship, current_lives):
+    def collissionShip(self, ship):
         if self.rect.colliderect(ship.rect):
-            current_lives -= 1
-            print(current_lives)
-            self.rect.x = randint(80, self.window_width-80)
-            self.rect.y = -40
-        return current_lives
+            return True
 
     def collisionBullet(self, score_points):
         for bullet in self.bullets:
@@ -108,7 +104,7 @@ class Game():
         # Vars
         self.score_points = 0
         self.missed_aliens = 0
-        self.current_lives = 3  # Number of HP
+        # self.current_lives = 3  # Number of HP
 
         self.finish = False
         self.game = True
@@ -131,10 +127,7 @@ class Game():
         self.aliens = pygame.sprite.Group()
 
         # Creating aliens
-        for _ in range(1, 6):
-            alien = Alien(self.ship, self.bullets, self.window, self.window_height, self.window_width,
-                           image_alien, randint(100, self.window_width-100), -40, 100, 100, randint(1, 4))
-            self.aliens.add(alien)
+        self.createAliens()
 
         # # Music
         # pygame.mixer.init()
@@ -152,6 +145,18 @@ class Game():
         # self.font_finish = pygame.font.Font(None, 100)
         # self.lost = self.font_finish.render('YOU LOST', True, (120, 13, 31))
         # self.win = self.font_finish.render('YOU WIN', True, (32, 252, 3))
+    def createAliens(self):
+        for _ in range(1, 6):
+            alien = Alien(self.ship, self.bullets, self.window, self.window_height, self.window_width,
+                            image_alien, randint(100, self.window_width-100), -40, 100, 100, randint(1, 4))
+            self.aliens.add(alien)
+
+    def alienCollision(self):
+        for alien in self.aliens:
+            if alien.collissionShip(self.ship):
+                # self.current_lives -= 1
+                self.aliens.empty()
+                self.createAliens()
 
     def game_loop(self):
         while self.game:  # Game loop
@@ -167,18 +172,17 @@ class Game():
                 # Render fonts
                 self.score = self.font.render(f'Score: {self.score_points}', True, (255, 232, 31))
                 self.missed = self.font.render(f'Missed: {self.missed_aliens}', True, (255, 232, 31))
-                self.hp = self.font.render(f'{self.current_lives}', True, (255, 232, 31))
+                # self.hp = self.font.render(f'{self.current_lives}', True, (255, 232, 31))
                 
                 # Update background
                 self.window.blit(self.background, (0,0))  # Background
                 self.window.blit(self.score, (10, 0))  # Score label
                 self.window.blit(self.missed, (10, 25))  # Missed label
-                self.window.blit(self.hp, (self.window_width - 50, 15))  # HP Label
+                # self.window.blit(self.hp, (self.window_width - 50, 15))  # HP Label
 
                 # Update movement
                 for alien in self.aliens:
                     self.score_points = alien.collisionBullet(self.score_points)
-                    self.current_lives = alien.collissionShip(self.ship, self.current_lives)
                     self.missed_aliens = alien.updateMove(self.missed_aliens)
 
                 self.bullets.update()
@@ -191,7 +195,7 @@ class Game():
                 self.ship.reset()
 
                 # Losing
-                if self.current_lives <= 0:
+                if self.alienCollision():
                     self.finish = True
                 #     window.blit(lost, (window_width/2 - 200, window_height/2 - 50))
                 if self.missed_aliens >= 6:
@@ -203,16 +207,14 @@ class Game():
                     self.finish = True
                     # window.blit(win, (500, 400))
             else:
-                self.current_lives = 3
+                # self.current_lives = 3
                 self.missed_aliens = 0
                 self.score_points = 0
                 self.finish = False
             pygame.display.update()
-
             pygame.time.delay(30)
             
             
-        
-
+    
 GamePlay = Game()
 GamePlay.game_loop()
