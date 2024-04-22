@@ -108,6 +108,7 @@ class Game():
 
         self.finish = False
         self.game = True
+        self.previous_time = pygame.time.get_ticks()
 
         # Create a window
         self.window_width = 1300
@@ -164,9 +165,13 @@ class Game():
                 if event.type == pygame.QUIT:
                     self.game = False
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    self.bullets.add(self.ship.fire())
+                    self.current_time = pygame.time.get_ticks()
+                    # We're ready to fire when 500 ms have passed.
+                    if self.current_time - self.previous_time > 500:
+                        self.previous_time = self.current_time
+                        self.bullets.add(self.ship.fire())
                     # shoot_sound.play()
-
+            
             
             if not self.finish:
                 # Render fonts
