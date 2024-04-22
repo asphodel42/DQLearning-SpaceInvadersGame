@@ -6,8 +6,9 @@ from random import randint
 
 class GameSprite(pygame.sprite.Sprite):
     """Main class for sprites"""
-    def __init__(self, player_image, player_x, player_y, width, height, speed):  # Initialization
+    def __init__(self, window, player_image, player_x, player_y, width, height, speed):  # Initialization
         pygame.sprite.Sprite.__init__(self)
+        self.window = window
 
         self.image = pygame.transform.scale(pygame.image.load(
             player_image), (width, height))  # Sprite object
@@ -21,7 +22,7 @@ class GameSprite(pygame.sprite.Sprite):
 
     # Draw a sprite 
     def reset(self):
-        window.blit(self.image, (self.rect.x, self.rect.y))
+        self.window.blit(self.image, (self.rect.x, self.rect.y))
 
     
 class Player(GameSprite):
@@ -113,7 +114,7 @@ window = pygame.display.set_mode((window_width, window_height))
 background = pygame.transform.scale(pygame.image.load(image_background), (window_width, window_height))
 
 # Creating star ship
-ship = Player(image_ship, 5, window_height-100, 120, 100, 15)
+ship = Player(window, image_ship, 5, window_height-100, 120, 100, 15)
 bullets = pygame.sprite.Group()
 aliens = pygame.sprite.Group()
 
