@@ -8,6 +8,7 @@ class GameSprite(pygame.sprite.Sprite):
     """Main class for sprites"""
     def __init__(self, window, player_image, player_x, player_y, width, height, speed):  # Initialization
         pygame.sprite.Sprite.__init__(self)
+        self.window = window
 
         self.image = pygame.transform.scale(pygame.image.load(
             player_image), (width, height))  # Sprite object
@@ -27,7 +28,6 @@ class GameSprite(pygame.sprite.Sprite):
 class Player(GameSprite):
     # controls
     def update(self):
-        global ammo_count
         keys = pygame.key.get_pressed()
         if keys[pygame.K_a] and self.rect.x > 5:
             self.rect.x -= self.speed
@@ -37,13 +37,11 @@ class Player(GameSprite):
             self.rect.y -= self.speed
         if keys[pygame.K_s] and self.rect.y < window_height - 105:
             self.rect.y += self.speed
-        if keys[pygame.K_r]:
-            ammo_count = 6
 
 
     # Create a bullet that's moving up
     def fire(self):
-        bullet = Bullet(image_bullet, self.rect.centerx, self.rect.y, 10, 60, 20)
+        bullet = Bullet(window, image_bullet, self.rect.centerx, self.rect.y, 10, 60, 20)
         return bullet
     
 
@@ -97,7 +95,6 @@ font_name           = "SpaceInvaders/assets/font/Starjout.ttf"  # Font
 # Vars
 score_points = 0
 missed_aliens = 0
-ammo_count = 6
 current_lives = 3  # Number of HP
 
 finish = False
@@ -119,7 +116,7 @@ aliens = pygame.sprite.Group()
 
 # Creating aliens
 for i in range(1, 6):
-    alien = Alien(image_alien, randint(100, window_width-100), -40, 100, 100, randint(1, 4))
+    alien = Alien(window, image_alien, randint(100, window_width-100), -40, 100, 100, randint(1, 4))
     aliens.add(alien)
 
 # Music
@@ -144,8 +141,7 @@ while game:  # Game loop
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             game = False
-        if event.type == pygame.MOUSEBUTTONDOWN and ammo_count > 0:
-            ammo_count -= 1
+        if event.type == pygame.MOUSEBUTTONDOWN:
             bullets.add(ship.fire())
             shoot_sound.play()
 
@@ -154,14 +150,12 @@ while game:  # Game loop
         # Render fonts
         score = font.render(f'Score: {score_points}', True, (255, 232, 31))
         missed = font.render(f'Missed: {missed_aliens}', True, (255, 232, 31))
-        ammo = font.render(f'Ammo: {int(ammo_count)}', True, (255, 232, 31))
         hp = font.render(f'{current_lives}', True, (255, 232, 31))
         
         # Update background
         window.blit(background, (0,0))  # Background
         window.blit(score, (10, 0))  # Score label
         window.blit(missed, (10, 25))  # Missed label
-        window.blit(ammo, (window_width - 150, window_height - 50))  # Ammo label
         window.blit(hp, (window_width - 50, 15))  # HP Label
 
         # Update movement
