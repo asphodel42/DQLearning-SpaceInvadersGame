@@ -69,14 +69,12 @@ class Alien(GameSprite):
         self.ship = ship
         self.bullets = bullets
 
-    def updateMove(self, missed_aliens):
+    def updateMove(self):
         self.rect.y += self.speed
         # Disapear if crossed the edge of window
         if self.rect.y > self.window_height:
-            self.rect.x = randint(100, self.window_width - 100)
-            self.rect.y = 0
-            missed_aliens += 1
-        return missed_aliens
+            return True
+        else: return False
 
     def collissionShip(self, ship):
         if self.rect.colliderect(ship.rect):
@@ -103,11 +101,12 @@ class Game():
     def __init__(self):
         # Vars
         self.score_points = 0
-        self.missed_aliens = 0
+        # self.missed_aliens = 0
         # self.current_lives = 3  # Number of HP
 
         self.finish = False
         self.game = True
+        self.record_score_points = 0
         self.previous_time = pygame.time.get_ticks()
 
         # Create a window
@@ -154,10 +153,10 @@ class Game():
 
     def alienCollision(self):
         for alien in self.aliens:
-            if alien.collissionShip(self.ship):
+            if alien.collissionShip(self.ship) or alien.updateMove():
                 # self.current_lives -= 1
                 self.aliens.empty()
-                self.createAliens()
+                return True
 
     def game_loop(self):
         while self.game:  # Game loop
@@ -175,20 +174,21 @@ class Game():
             
             if not self.finish:
                 # Render fonts
+
+                self.record_score = self.font.render(f'Record: {self.record_score_points}', True, (255, 232, 31))
                 self.score = self.font.render(f'Score: {self.score_points}', True, (255, 232, 31))
-                self.missed = self.font.render(f'Missed: {self.missed_aliens}', True, (255, 232, 31))
                 # self.hp = self.font.render(f'{self.current_lives}', True, (255, 232, 31))
                 
                 # Update background
                 self.window.blit(self.background, (0,0))  # Background
-                self.window.blit(self.score, (10, 0))  # Score label
-                self.window.blit(self.missed, (10, 25))  # Missed label
+                self.window.blit(self.record_score, (10, 0))  # Record score label
+                self.window.blit(self.score, (10, 25))  # Score label
                 # self.window.blit(self.hp, (self.window_width - 50, 15))  # HP Label
 
                 # Update movement
                 for alien in self.aliens:
                     self.score_points = alien.collisionBullet(self.score_points)
-                    self.missed_aliens = alien.updateMove(self.missed_aliens)
+                    # self.missed_aliens = alien.updateMove(self.missed_aliens)
 
                 self.bullets.update()
                 self.aliens.update()
@@ -202,19 +202,22 @@ class Game():
                 # Losing
                 if self.alienCollision():
                     self.finish = True
+                    if self.score_points > self.record_score_points:
+                        self.record_score_points = self.score_points
                 #     window.blit(lost, (window_width/2 - 200, window_height/2 - 50))
-                if self.missed_aliens >= 6:
-                    self.finish = True
+                # if self.missed_aliens >= 6:
+                #     self.finish = True
                 #     window.blit(lost, (window_width/2 - 200, window_height/2 - 50))
 
                 # Winning
-                if self.score_points >= 30:
-                    self.finish = True
+                # if self.score_points >= 30:
+                #     self.finish = True
                     # window.blit(win, (500, 400))
             else:
                 # self.current_lives = 3
-                self.missed_aliens = 0
+                # self.missed_aliens = 0
                 self.score_points = 0
+                self.createAliens()
                 self.finish = False
             pygame.display.update()
             pygame.time.delay(30)
