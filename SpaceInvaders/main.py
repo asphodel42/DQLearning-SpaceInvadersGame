@@ -183,7 +183,7 @@ while game:  # Game loop
             window.blit(lost, (window_width/2 - 200, window_height/2 - 50))
         if missed_aliens >= 6:
             finish = True
-            window.blit(lost, (window_width/2 - 200, window_height/2 - 50)))
+            window.blit(lost, (window_width/2 - 200, window_height/2 - 50))
 
         # Winning
         if score_points >= 30:
