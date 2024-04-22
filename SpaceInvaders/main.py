@@ -1,6 +1,4 @@
 import pygame
-import time
-import emoji
 from random import randint
 
 
