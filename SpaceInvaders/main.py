@@ -4,11 +4,25 @@ import emoji
 from random import randint
 
 
+# Assets
+image_background    = 'SpaceInvaders/assets/background/galaxy.jpg'  # Background
+image_ship          = 'SpaceInvaders/assets/sprites/space_ship_state.png'  # Player
+image_bullet        = 'SpaceInvaders/assets/sprites/laser.png'  # Bullets
+image_alien         = 'SpaceInvaders/assets/sprites/alien.png'  # Enemy
+sound_music         = 'SpaceInvaders/assets/music/space.ogg'  # Music
+sound_shoot         = 'SpaceInvaders/assets/music/shoot_sound.ogg'
+sound_explosion     = 'SpaceInvaders/assets/music/explosion.ogg'  # Explosion
+image_icon          = 'SpaceInvaders/assets/background/icon.png'  # Icon
+font_name           = "SpaceInvaders/assets/font/Starjout.ttf"  # Font
+
 class GameSprite(pygame.sprite.Sprite):
     """Main class for sprites"""
-    def __init__(self, window, player_image, player_x, player_y, width, height, speed):  # Initialization
+    def __init__(self, window, win_height, win_width, 
+                 player_image, player_x, player_y, width, height, speed):  # Initialization
         pygame.sprite.Sprite.__init__(self)
         self.window = window
+        self.window_height = win_height
+        self.window_width = win_width
 
         self.image = pygame.transform.scale(pygame.image.load(
             player_image), (width, height))  # Sprite object
@@ -31,47 +45,56 @@ class Player(GameSprite):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_a] and self.rect.x > 5:
             self.rect.x -= self.speed
-        if keys[pygame.K_d] and self.rect.x < window_width - 105:
+        if keys[pygame.K_d] and self.rect.x < self.window_width - 105:
             self.rect.x += self.speed
         if keys[pygame.K_w] and self.rect.y > 600:
             self.rect.y -= self.speed
-        if keys[pygame.K_s] and self.rect.y < window_height - 105:
+        if keys[pygame.K_s] and self.rect.y < self.window_height - 105:
             self.rect.y += self.speed
 
 
     # Create a bullet that's moving up
     def fire(self):
-        bullet = Bullet(window, image_bullet, self.rect.centerx, self.rect.y, 10, 60, 20)
+        bullet = Bullet(self.window, self.window_height, self.window_width,
+                         image_bullet, self.rect.centerx, self.rect.y, 10, 60, 20)
         return bullet
     
 
 
 class Alien(GameSprite):
-    def update(self):
-        global missed_aliens, finish, current_lives
+    def __init__(self, ship, bullets, window, win_height, win_width, 
+                 player_image, player_x, player_y, width, height, speed):
+        super().__init__(window, win_height, win_width, 
+                 player_image, player_x, player_y, width, height, speed)
+        self.ship = ship
+        self.bullets = bullets
+
+    def updateMove(self, missed_aliens):
         self.rect.y += self.speed
         # Disapear if crossed the edge of window
-        if self.rect.y > window_height:
-            self.rect.x = randint(100, window_width - 100)
+        if self.rect.y > self.window_height:
+            self.rect.x = randint(100, self.window_width - 100)
             self.rect.y = 0
             missed_aliens += 1
+        return missed_aliens
 
+    def collissionShip(self, ship, current_lives):
         if self.rect.colliderect(ship.rect):
             current_lives -= 1
             print(current_lives)
-            self.rect.x = randint(80, window_width-80)
+            self.rect.x = randint(80, self.window_width-80)
             self.rect.y = -40
-            
+        return current_lives
 
-    def collision(self):
-        global score_points
-        for bullet in bullets:
+    def collisionBullet(self, score_points):
+        for bullet in self.bullets:
             if self.rect.colliderect(bullet.rect):
-                explosion_sound.play()
+                # explosion_sound.play()
                 bullet.kill()
-                self.rect.x = randint(80, window_width-80)
+                self.rect.x = randint(80, self.window_width-80)
                 self.rect.y = -40
                 score_points += 1
+        return score_points
 
 
 class Bullet(GameSprite):
@@ -80,110 +103,109 @@ class Bullet(GameSprite):
         if self.rect.y <= -100:
             self.kill()
         
+class Game():
+    def __init__(self):
+        # Vars
+        self.score_points = 0
+        self.missed_aliens = 0
+        self.current_lives = 3  # Number of HP
 
-# Assets
-image_background    = 'SpaceInvaders/assets/background/galaxy.jpg'  # Background
-image_ship          = 'SpaceInvaders/assets/sprites/space_ship_state.png'  # Player
-image_bullet        = 'SpaceInvaders/assets/sprites/laser.png'  # Bullets
-image_alien         = 'SpaceInvaders/assets/sprites/alien.png'  # Enemy
-sound_music         = 'SpaceInvaders/assets/music/space.ogg'  # Music
-sound_shoot         = 'SpaceInvaders/assets/music/shoot_sound.ogg'
-sound_explosion     = 'SpaceInvaders/assets/music/explosion.ogg'  # Explosion
-image_icon          = 'SpaceInvaders/assets/background/icon.png'  # Icon
-font_name           = "SpaceInvaders/assets/font/Starjout.ttf"  # Font
+        self.finish = False
+        self.game = True
 
-# Vars
-score_points = 0
-missed_aliens = 0
-current_lives = 3  # Number of HP
+        # Create a window
+        self.window_width = 1300
+        self.window_height = 800
+        pygame.display.set_caption("Space War")
+        pygame.display.set_icon(pygame.image.load(image_icon))
+        self.window = pygame.display.set_mode((self.window_width, self.window_height))
 
-finish = False
-game = True
+        # Creating background
+        self.background = pygame.transform.scale(pygame.image.load(image_background),
+                                            (self.window_width, self.window_height))
 
-# Create a window
-window_width, window_height = 1300, 800
-pygame.display.set_caption("Space War")
-pygame.display.set_icon(pygame.image.load(image_icon))
-window = pygame.display.set_mode((window_width, window_height))
+        # Creating star ship
+        self.ship = Player(self.window, self.window_height, self.window_width,
+                            image_ship, 5, self.window_height-100, 120, 100, 15)
+        self.bullets = pygame.sprite.Group()
+        self.aliens = pygame.sprite.Group()
 
-# Creating background
-background = pygame.transform.scale(pygame.image.load(image_background), (window_width, window_height))
+        # Creating aliens
+        for _ in range(1, 6):
+            alien = Alien(self.ship, self.bullets, self.window, self.window_height, self.window_width,
+                           image_alien, randint(100, self.window_width-100), -40, 100, 100, randint(1, 4))
+            self.aliens.add(alien)
 
-# Creating star ship
-ship = Player(window, image_ship, 5, window_height-100, 120, 100, 15)
-bullets = pygame.sprite.Group()
-aliens = pygame.sprite.Group()
+        # # Music
+        # pygame.mixer.init()
+        # pygame.mixer.music.load(sound_music)
+        # pygame.mixer.music.set_volume(0.05)
+        # pygame.mixer.music.play()
+        # shoot_sound = pygame.mixer.Sound(sound_shoot)
+        # shoot_sound.set_volume(0.1)
+        # explosion_sound = pygame.mixer.Sound(sound_explosion)
+        # explosion_sound.set_volume(0.1)
 
-# Creating aliens
-for i in range(1, 6):
-    alien = Alien(window, image_alien, randint(100, window_width-100), -40, 100, 100, randint(1, 4))
-    aliens.add(alien)
+        # Label
+        pygame.font.init()
+        self.font = pygame.font.Font(font_name, 25)
+        # self.font_finish = pygame.font.Font(None, 100)
+        # self.lost = self.font_finish.render('YOU LOST', True, (120, 13, 31))
+        # self.win = self.font_finish.render('YOU WIN', True, (32, 252, 3))
 
-# Music
-pygame.mixer.init()
-pygame.mixer.music.load(sound_music)
-pygame.mixer.music.set_volume(0.05)
-pygame.mixer.music.play()
-shoot_sound = pygame.mixer.Sound(sound_shoot)
-shoot_sound.set_volume(0.1)
-explosion_sound = pygame.mixer.Sound(sound_explosion)
-explosion_sound.set_volume(0.1)
+    def game_loop(self):
+        while self.game:  # Game loop
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.game = False
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    self.bullets.add(self.ship.fire())
+                    # shoot_sound.play()
 
-# Label
-pygame.font.init()
-font = pygame.font.Font(font_name, 25)
-font_finish = pygame.font.Font(None, 100)
-lost = font_finish.render('YOU LOST', True, (120, 13, 31))
-win = font_finish.render('YOU WIN', True, (32, 252, 3))
+            
+            if not self.finish:
+                # Render fonts
+                self.score = self.font.render(f'Score: {self.score_points}', True, (255, 232, 31))
+                self.missed = self.font.render(f'Missed: {self.missed_aliens}', True, (255, 232, 31))
+                self.hp = self.font.render(f'{self.current_lives}', True, (255, 232, 31))
+                
+                # Update background
+                self.window.blit(self.background, (0,0))  # Background
+                self.window.blit(self.score, (10, 0))  # Score label
+                self.window.blit(self.missed, (10, 25))  # Missed label
+                self.window.blit(self.hp, (self.window_width - 50, 15))  # HP Label
 
+                # Update movement
+                for alien in self.aliens:
+                    self.score_points = alien.collisionBullet(self.score_points)
+                    self.current_lives = alien.collissionShip(self.ship, self.current_lives)
+                    self.missed_aliens = alien.updateMove(self.missed_aliens)
 
-while game:  # Game loop
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            game = False
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            bullets.add(ship.fire())
-            shoot_sound.play()
+                self.bullets.update()
+                self.aliens.update()
+                self.ship.update()
 
-    
-    if not finish:
-        # Render fonts
-        score = font.render(f'Score: {score_points}', True, (255, 232, 31))
-        missed = font.render(f'Missed: {missed_aliens}', True, (255, 232, 31))
-        hp = font.render(f'{current_lives}', True, (255, 232, 31))
-        
-        # Update background
-        window.blit(background, (0,0))  # Background
-        window.blit(score, (10, 0))  # Score label
-        window.blit(missed, (10, 25))  # Missed label
-        window.blit(hp, (window_width - 50, 15))  # HP Label
+                # Sprites draw
+                self.bullets.draw(self.window)
+                self.aliens.draw(self.window)
+                self.ship.reset()
 
-        # Update movement
-        for alien in aliens:
-            alien.collision()
+                # Losing
+                # if current_lives <= 0:
+                #     finish = True
+                #     window.blit(lost, (window_width/2 - 200, window_height/2 - 50))
+                # if missed_aliens >= 6:
+                #     finish = True
+                #     window.blit(lost, (window_width/2 - 200, window_height/2 - 50))
 
-        bullets.update()
-        aliens.update()
-        ship.update()
+                # Winning
+                if self.score_points >= 30:
+                    finish = True
+                    # window.blit(win, (500, 400))
+            
+            pygame.display.update()
 
-        # Sprites draw
-        bullets.draw(window)
-        aliens.draw(window)
-        ship.reset()
+            pygame.time.delay(30)
 
-        # Losing
-        if current_lives <= 0:
-            finish = True
-            window.blit(lost, (window_width/2 - 200, window_height/2 - 50))
-        if missed_aliens >= 6:
-            finish = True
-            window.blit(lost, (window_width/2 - 200, window_height/2 - 50))
-
-        # Winning
-        if score_points >= 30:
-            finish = True
-            window.blit(win, (500, 400))
-    
-    pygame.display.update()
-
-    pygame.time.delay(30)
+GamePlay = Game()
+GamePlay.game_loop()
