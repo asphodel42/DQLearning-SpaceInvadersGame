@@ -7,7 +7,7 @@ The goal is to find:
 - optimal parameters
 - time 
 - learning curves 
-for the bot, which will allow us to investigate the effectiveness of reinforcement learning in an artificial environment - videogame. 
+for the bot which will allow us to investigate the effectiveness of reinforcement learning in an artificial environment - videogame. 
 The method consists of a set of environment states, a set of actions, a reward function, and a state transition function.
 
 ### Explanation
