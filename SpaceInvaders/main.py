@@ -191,21 +191,28 @@ class Game():
                 self.ship.reset()
 
                 # Losing
-                # if current_lives <= 0:
-                #     finish = True
+                if self.current_lives <= 0:
+                    self.finish = True
                 #     window.blit(lost, (window_width/2 - 200, window_height/2 - 50))
-                # if missed_aliens >= 6:
-                #     finish = True
+                if self.missed_aliens >= 6:
+                    self.finish = True
                 #     window.blit(lost, (window_width/2 - 200, window_height/2 - 50))
 
                 # Winning
                 if self.score_points >= 30:
-                    finish = True
+                    self.finish = True
                     # window.blit(win, (500, 400))
-            
+            else:
+                self.current_lives = 3
+                self.missed_aliens = 0
+                self.score_points = 0
+                self.finish = False
             pygame.display.update()
 
             pygame.time.delay(30)
+            
+            
+        
 
 GamePlay = Game()
 GamePlay.game_loop()
