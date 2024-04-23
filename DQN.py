@@ -26,7 +26,7 @@ class DQNetwork(nn.Module):
         self.fc3 = nn.Linear(self.fc2_dims, self.n_actions) 
         self.optimizer = optim.Adam(self.parameters(), lr=lr)
         self.loss = nn.MSELoss()
-        self.device = T.device('cude:0' if T.cuda.is_available else 'cpu')
+        self.device = T.device('cpu') # 'cuda:0' if T.cuda.is_available else 
         self.to(self.device)
 
     def forward(self, state):
@@ -53,9 +53,9 @@ class Agent():
                                 fc1_dims=256, fc2_dims=256)  # Can be changed
         
         self.state_memory = np.zeros((self.mem_size, *input_dims), dtype=np.float32)
-        self.new_state_memory = np.zeros((self.mem_sizem *input_dims), dtype=np.float32)
+        self.new_state_memory = np.zeros((self.mem_size, *input_dims), dtype=np.float32)
         self.action_memory = np.zeros(self.mem_size, dtype=np.int32)
-        self.terminal_memory = np.zeros(self.mem_size, dtype=np.bool)
+        self.terminal_memory = np.zeros(self.mem_size, dtype=bool)
 
     def store_transition(self, state, action, reward, new_state, done):
         index = self.mem_cntr % self.mem_size
