@@ -143,6 +143,12 @@ class Game():
         # self.font_finish = pygame.font.Font(None, 100)
         # self.lost = self.font_finish.render('YOU LOST', True, (120, 13, 31))
         # self.win = self.font_finish.render('YOU WIN', True, (32, 252, 3))
+    
+    def onScreenUpdate(self):
+        self.surface_array = pygame.surfarray.array3d(pygame.display.get_surface())  
+        print("We got the screen array")  
+        print(self.surface_array)  
+
     def createAliens(self):
         for _ in range(1, 6):
             alien = Alien(self.ship, self.bullets, self.window, self.window_height, self.window_width,
@@ -168,7 +174,6 @@ class Game():
                         self.previous_time = self.current_time
                         self.bullets.add(self.ship.fire())
                     # shoot_sound.play()
-            
             
             if not self.finish:
                 # Render fonts
@@ -217,8 +222,10 @@ class Game():
                 self.score_points = 0
                 self.createAliens()
                 self.finish = False
+            # pygame.display.update = self.function_combine(pygame.display.update, self.onScreenUpdate)
             pygame.display.update()
-            pygame.time.delay(30)
+            self.onScreenUpdate()
+            pygame.time.delay(10)
             
             
     
