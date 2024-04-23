@@ -1,6 +1,7 @@
 import pygame
 from random import randint
 from DQN import Agent
+import numpy as np
 
 
 # Assets
@@ -39,27 +40,32 @@ class GameSprite(pygame.sprite.Sprite):
 
     
 class Player(GameSprite):
+    def __init__(self, window, win_height, win_width, 
+                 player_image, player_x, player_y, width, height, speed):
+        super().__init__(window, win_height, win_width, 
+                 player_image, player_x, player_y, width, height, speed)
+        self.current_time = pygame.time.get_ticks()
+        self.previous_time = self.current_time
     # controls
-    def update(self):
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_a] and self.rect.x > 5:
+    def update(self, action, bullets):
+        # keys = pygame.key.get_pressed()
+        if action == 0 and self.rect.x > 5:
             self.rect.x -= self.speed
-        if keys[pygame.K_d] and self.rect.x < self.window_width - 105:
+        if action == 1 and self.rect.x < self.window_width - 105:
             self.rect.x += self.speed
-        # if keys[pygame.K_w] and self.rect.y > 600:
-        #     self.rect.y -= self.speed
-        # if keys[pygame.K_s] and self.rect.y < self.window_height - 105:
-        #     self.rect.y += self.speed
-
-
+        if action == 2:
+            self.current_time = pygame.time.get_ticks()
+            # We're ready to fire when 500 ms have passed.
+            if self.current_time - self.previous_time > 500:
+                bullets.add(self.fire())
+                self.previous_time = self.current_time 
+               
     # Create a bullet that's moving up
     def fire(self):
         bullet = Bullet(self.window, self.window_height, self.window_width,
-                         image_bullet, self.rect.centerx, self.rect.y, 10, 60, 20)
+                         image_bullet, self.rect.centerx, self.rect.y, 10, 60, 100)
         return bullet
     
-
-
 class Alien(GameSprite):
     def __init__(self, ship, bullets, window, win_height, win_width, 
                  player_image, player_x, player_y, width, height, speed):
@@ -81,19 +87,19 @@ class Alien(GameSprite):
 
     def getPos(self):
         return [self.pos_x, self.pos_y]
+    
     def collissionShip(self, ship):
         if self.rect.colliderect(ship.rect):
             return True
 
-    def collisionBullet(self, score_points):
+    def collisionBullet(self):
         for bullet in self.bullets:
             if self.rect.colliderect(bullet.rect):
                 # explosion_sound.play()
                 bullet.kill()
                 self.rect.x = randint(80, self.window_width-80)
                 self.rect.y = -40
-                score_points += 1
-        return score_points
+                return True 
 
 
 class Bullet(GameSprite):
@@ -106,15 +112,16 @@ class Game():
     def __init__(self):
         # Vars
         self.score_points = 0
+        self.reward = 0
 
         self.finish = False
         self.game = True
         self.record_score_points = 0
         self.previous_time = pygame.time.get_ticks()
-
+        
         # Create a window
-        self.window_width = 1300
-        self.window_height = 800
+        self.window_width = 400
+        self.window_height = 400
         pygame.display.set_caption("Space War")
         pygame.display.set_icon(pygame.image.load(image_icon))
         self.window = pygame.display.set_mode((self.window_width, self.window_height))
@@ -122,64 +129,64 @@ class Game():
         # Creating background
         self.background = pygame.transform.scale(pygame.image.load(image_background),
                                             (self.window_width, self.window_height))
-
         # Creating star ship
         self.ship = Player(self.window, self.window_height, self.window_width,
-                            image_ship, 5, self.window_height-100, 120, 100, 15)
+                            image_ship, self.window_width / 2, self.window_height-100, 60, 50, 15)
+        # Creating groups for objects
         self.bullets = pygame.sprite.Group()
         self.aliens = pygame.sprite.Group()
+
+        # TODO: get observation of a display
+        self.observation = self.onScreenUpdate()
+        self.observation_ = self.onScreenUpdate()
 
         # Creating aliens
         self.createAliens()
 
-        # # Music
-        # pygame.mixer.init()
-        # pygame.mixer.music.load(sound_music)
-        # pygame.mixer.music.set_volume(0.05)
-        # pygame.mixer.music.play()
-        # shoot_sound = pygame.mixer.Sound(sound_shoot)
-        # shoot_sound.set_volume(0.1)
-        # explosion_sound = pygame.mixer.Sound(sound_explosion)
-        # explosion_sound.set_volume(0.1)
-
         # Label
         pygame.font.init()
         self.font = pygame.font.Font(font_name, 25)
+
+    # TODO: one of a variant of screen capturing    
+    # def get_state(self):
+    #     pygame.pixelcopy.surface_to_array(self.current_buffer, self.screen)
+    #     print(self.current_buffer)
+    #     return self.current_buffer
+    
     
     def onScreenUpdate(self):
-        self.surface_array = pygame.surfarray.array3d(pygame.display.get_surface())  
-
+        return pygame.surfarray.array2d(pygame.display.get_surface())
+    
     def createAliens(self):
         for _ in range(1, 6):
             alien = Alien(self.ship, self.bullets, self.window, self.window_height, self.window_width,
-                            image_alien, randint(100, self.window_width-100), -40, 100, 100, randint(1, 4))
+                            image_alien, randint(100, self.window_width-100), -40, 50, 50, randint(1, 4))
             self.aliens.add(alien)
 
     def alienCollision(self):
         for alien in self.aliens:
             if alien.collissionShip(self.ship) or alien.updateMove():
-                # self.current_lives -= 1
                 self.aliens.empty()
                 return True
 
     def game_loop(self):
+        #TODO: Create agent
+        # agent = Agent(gamma=0.99, epsilon=1, eps_end=0.001, eps_dec=5e-4, lr=0.001, 
+        #                       batch_size=64, n_actions=3, input_dims=[400,400])
+        self.n_games = 500
+        self.episode = 1
+        self.scores, self.eps_history = [], []
+
         while self.game:  # Game loop
-            # Creating agent
-            agent = Agent(gamma=0.99, epsilon=1, eps_end=0.001, eps_dec=1e-4, lr=0.001, 
-                              batch_size=64, n_actions=3, input_dims=[8])
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.game = False
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    self.current_time = pygame.time.get_ticks()
-                    # We're ready to fire when 500 ms have passed.
-                    if self.current_time - self.previous_time > 200:
-                        self.previous_time = self.current_time
-                        self.bullets.add(self.ship.fire())
-                    # shoot_sound.play()
-            
             if not self.finish:
-                self.aliensCord = []
+                # self.aliensCord = []
+                self.reward = 0
+                #TODO: Action created by an agent
+                # self.action = agent.choose_action(self.observation)
+                self.action = 2;  # REMOVE
 
                 # Render fonts
                 self.record_score = self.font.render(f'Record: {self.record_score_points}', True, (255, 232, 31))
@@ -190,9 +197,9 @@ class Game():
                 self.window.blit(self.record_score, (10, 0))  # Record score label
                 self.window.blit(self.score, (10, 25))  # Score label
                 
+                self.ship.update(self.action, self.bullets)
                 self.bullets.update()
                 self.aliens.update()
-                self.ship.update()
 
                 # Sprites draw
                 self.bullets.draw(self.window)
@@ -201,23 +208,34 @@ class Game():
 
                 # Update movement
                 for alien in self.aliens:
-                    self.score_points = alien.collisionBullet(self.score_points)
-                    self.aliensCord.append(alien.getPos()) 
-                # print(f"ALines has cords: {self.aliensCord}")
+                    if alien.collisionBullet():
+                        self.score_points += 1
+                        self.reward += 1
+                    # self.aliensCord.append(alien.getPos())
 
                 # Losing
                 if self.alienCollision():
                     self.finish = True
                     if self.score_points > self.record_score_points:
                         self.record_score_points = self.score_points
+
+                # self.observation_ = self.onScreenUpdate()
+                # agent.store_transition(self.observation, self.action, self.reward,
+                #                     self.observation_, self.finish)
+                # agent.learn()
+                # self.observation = self.observation_
             else:
+                self.scores.append(self.score_points)
+                # self.eps_history.append(agent.epsilon)
+
+                # print(f"Episode {self.episode} | Score {self.score_points} | Epsilon {agent.epsilon} | Record {self.record_score_points}")
+                self.episode += 1
                 self.score_points = 0
                 self.createAliens()
                 self.finish = False
 
             pygame.display.update()
-            self.onScreenUpdate()
-            pygame.time.delay(10)
+            pygame.time.delay(40)
             
             
     
