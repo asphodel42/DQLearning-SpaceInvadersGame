@@ -106,8 +106,6 @@ class Game():
     def __init__(self):
         # Vars
         self.score_points = 0
-        # self.missed_aliens = 0
-        # self.current_lives = 3  # Number of HP
 
         self.finish = False
         self.game = True
@@ -147,9 +145,6 @@ class Game():
         # Label
         pygame.font.init()
         self.font = pygame.font.Font(font_name, 25)
-        # self.font_finish = pygame.font.Font(None, 100)
-        # self.lost = self.font_finish.render('YOU LOST', True, (120, 13, 31))
-        # self.win = self.font_finish.render('YOU WIN', True, (32, 252, 3))
     
     def onScreenUpdate(self):
         self.surface_array = pygame.surfarray.array3d(pygame.display.get_surface())  
@@ -169,6 +164,7 @@ class Game():
 
     def game_loop(self):
         while self.game:  # Game loop
+            # Creating agent
             agent = Agent(gamma=0.99, epsilon=1, eps_end=0.001, eps_dec=1e-4, lr=0.001, 
                               batch_size=64, n_actions=3, input_dims=[8])
             for event in pygame.event.get():
@@ -207,8 +203,8 @@ class Game():
                 for alien in self.aliens:
                     self.score_points = alien.collisionBullet(self.score_points)
                     self.aliensCord.append(alien.getPos()) 
-
                 # print(f"ALines has cords: {self.aliensCord}")
+
                 # Losing
                 if self.alienCollision():
                     self.finish = True
