@@ -184,8 +184,7 @@ class Game():
         #TODO: Create agent
         agent = Agent(gamma=0.99, epsilon=1, eps_end=0.05, eps_dec=5e-4, lr=0.001, 
                               batch_size=64, n_actions=3, input_dims=[16,])
-        self.n_games = 500
-        self.episode = 1
+        self.n_games = 5000
         self.scores, self.eps_history = [], []
         for episode in range(1, self.n_games):
             self.game = True
@@ -195,7 +194,6 @@ class Game():
                     if event.type == pygame.QUIT:
                         quit()
                 if not self.finish:
-                    # self.aliensCord = []
                     self.getObjectsPos()
                     self.reward = 0
                     #TODO: Action created by an agent
@@ -257,6 +255,8 @@ class Game():
                     self.game=False 
                 pygame.display.update()
                 pygame.time.delay(40)
+        print("~~~~~~~~~~~~SCORES~~~~~~~~~~~~")
+        print(self.scores)
              
 GamePlay = Game()
 GamePlay.game_loop()
