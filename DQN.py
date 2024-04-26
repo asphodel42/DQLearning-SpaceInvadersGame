@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import numpy as np
+
 class DeepQNetwork(nn.Module):
     '''
     lr - learnig rate
@@ -13,20 +14,20 @@ class DeepQNetwork(nn.Module):
     fc2_dims - The number of neurons in the second fully connected layer
     n_actions - number of actions
     '''
-    def __init__(self, lr, input_dims, fc1_dims, fc2_dims,
+    def __init__(self, lr, input_dims, layer1, layer2,
                  n_actions):
         super(DeepQNetwork, self).__init__()
         self.input_dims = input_dims
-        self.fc1_dims = fc1_dims
-        self.fc2_dims = fc2_dims
+        self.layer1 = layer1
+        self.layer2 = layer2
         self.n_actions = n_actions
-        self.fc1 = nn.Linear(*self.input_dims, self.fc1_dims)
-        self.fc2 = nn.Linear(self.fc1_dims, self.fc2_dims)
-        self.fc3 = nn.Linear(self.fc2_dims, self.n_actions)
+        self.fc1 = nn.Linear(*self.input_dims, self.layer1)
+        self.fc2 = nn.Linear(self.layer1, self.layer2)
+        self.fc3 = nn.Linear(self.layer2, self.n_actions)
 
         self.optimizer = optim.Adam(self.parameters(), lr=lr)
         self.loss = nn.MSELoss()
-        self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
+        self.device = T.device("cpu") # 'cuda:0' if T.cuda.is_available() else 
         self.to(self.device)
 
     def forward(self, state):
@@ -54,7 +55,7 @@ class Agent:
 
         self.Q_eval = DeepQNetwork(lr, n_actions=n_actions,
                                    input_dims=input_dims,
-                                   fc1_dims=256, fc2_dims=256)
+                                   layer1=256, layer2=256)
         self.state_memory = np.zeros((self.mem_size, *input_dims),
                                      dtype=np.float32)
         self.new_state_memory = np.zeros((self.mem_size, *input_dims),
@@ -75,12 +76,11 @@ class Agent:
 
     def choose_action(self, observation):
         if np.random.random() > self.epsilon:
-            state = T.tensor([observation]).to(self.Q_eval.device)
+            state = T.tensor(observation).to(self.Q_eval.device)
             actions = self.Q_eval.forward(state)
             action = T.argmax(actions).item()
         else:
             action = np.random.choice(self.action_space)
-
         return action
 
     def learn(self):
