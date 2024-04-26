@@ -7,12 +7,12 @@ from DQN import Agent
 from database import create_connection, create_database, create_table, insert_data 
 
 # Assets
-image_background    = 'SpaceInvaders/assets/background/galaxy.jpg'  # Background
-image_ship          = 'SpaceInvaders/assets/sprites/space_ship_state.png'  # Player
-image_bullet        = 'SpaceInvaders/assets/sprites/laser.png'  # Bullets
-image_alien         = 'SpaceInvaders/assets/sprites/alien.png'  # Enemy
-image_icon          = 'SpaceInvaders/assets/background/icon.png'  # Icon
-font_name           = "SpaceInvaders/assets/font/Starjout.ttf"  # Font
+image_background    = 'assets/background/galaxy.jpg'  # Background
+image_ship          = 'assets/sprites/space_ship_state.png'  # Player
+image_bullet        = 'assets/sprites/laser.png'  # Bullets
+image_alien         = 'assets/sprites/alien.png'  # Enemy
+image_icon          = 'assets/background/icon.png'  # Icon
+font_name           = "assets/font/Starjout.ttf"  # Font
 
 
 class GameSprite(pygame.sprite.Sprite):
