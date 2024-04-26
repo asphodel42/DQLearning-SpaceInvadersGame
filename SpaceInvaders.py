@@ -1,9 +1,10 @@
 import pygame
 from random import randint
 import time
-from DQN import Agent
 import numpy as np
 import pandas as pd
+from DQN import Agent
+from database import create_connection, create_database, create_table, insert_data 
 
 # Assets
 image_background    = 'SpaceInvaders/assets/background/galaxy.jpg'  # Background
@@ -109,6 +110,16 @@ class Bullet(GameSprite):
         
 class Game():
     def __init__(self, num_games, gamma, lr):
+        # Connection to database
+        host = 'localhost'
+        user = 'root'
+        password = '0000'
+        database = 'dql_data'
+
+        create_database(host, user, password, database)
+        self.connection = create_connection(host, user, password, database)
+        create_table(self.connection)
+
         # Vars
         self.score_points = 0
         self.record_score_points = 0
@@ -245,7 +256,8 @@ class Game():
                     self.dataFrame = self.addToDataFrame(self.dataFrame, episode, self.score_points, 
                                                             self.record_score_points, self.agent.epsilon, 
                                                             self.agent.gamma, self.agent.lr, episodeDuration)
-                    print(self.dataFrame)
+                    insert_data(self.connection, episode, self.score_points, self.record_score_points,
+                                     self.agent.epsilon, self.agent.gamma, self.agent.lr, episodeDuration)
                     self.score_points = 0
                     self.createAliens()
                     self.game=False 
