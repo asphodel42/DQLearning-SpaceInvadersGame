@@ -2,6 +2,7 @@ import pygame
 from random import randint
 from DQN import Agent
 import numpy as np
+import pandas as pd
 
 
 # Assets
@@ -58,8 +59,8 @@ class Player(GameSprite):
             self.rect.x += self.speed
         if action == 2:
             self.current_time = pygame.time.get_ticks()
-            # We're ready to fire when 500 ms have passed.
-            if self.current_time - self.previous_time > 500:
+            # We're ready to fire when 300 ms have passed.
+            if abs(self.current_time - self.previous_time) > 300:
                 bullets.add(self.fire())
                 self.previous_time = self.current_time 
                
@@ -93,13 +94,11 @@ class Alien(GameSprite):
     def collisionBullet(self):
         for bullet in self.bullets:
             if self.rect.colliderect(bullet.rect):
-                # explosion_sound.play()
                 bullet.kill()
                 self.rect.x = randint(80, self.window_width-80)
                 self.rect.y = -40
                 return True 
-
-
+            
 class Bullet(GameSprite):
     def update(self):
         self.rect.y -= self.speed
@@ -145,17 +144,13 @@ class Game():
         # TODO: get observation of a display
         self.observation = self.getObjectsPos()
         self.observation_ = self.getObjectsPos()
+
+        self.dataFrame = pd.DataFrame(columns=['Episode','Score', 'Epsilon', 'Gamma', 'Alpha'])
         
 
 
-    # TODO: one of a variant of screen capturing    
-    # def get_state(self):
-    #     pygame.pixelcopy.surface_to_array(self.current_buffer, self.screen)
-    #     print(self.current_buffer)
-    #     return self.current_buffer
-
     def getObjectsPos(self):
-        cordArray = np.zeros(2 * 8, dtype=np.float32)
+        cordArray = np.zeros(2 * 9, dtype=np.float32)
         cordArray[0], cordArray[1] = self.ship.getPos()
         index = 2
         for alien in self.aliens:
@@ -163,15 +158,13 @@ class Game():
             index += 2
         for bullet in self.bullets:
             cordArray[index], cordArray[index+1] = bullet.getPos()
+            index += 2
         return cordArray    
-    
-    def onScreenUpdate(self):
-        return pygame.surfarray.array2d(pygame.display.get_surface())
     
     def createAliens(self):
         for _ in range(1, 6):
             alien = Alien(self.ship, self.bullets, self.window, self.window_height, self.window_width,
-                            image_alien, randint(100, self.window_width-100), -40, 50, 50, randint(2, 4))
+                            image_alien, randint(60, self.window_width-60), -40, 50, 50, randint(4, 8))
             self.aliens.add(alien)
 
     def alienCollision(self):
@@ -179,12 +172,24 @@ class Game():
             if alien.collissionShip(self.ship) or alien.updateMove():
                 self.aliens.empty()
                 return True
+            
+    def addGameDataToDataFrame(df, episode, score, record, epsilon, gamma, alpha):
+        new_row = pd.DataFrame({
+            'Episode': [episode],
+            'Score': [score],
+            'Record': [record],
+            'Epsilon': [epsilon],
+            'Gamma': [gamma],
+            'Alpha': [alpha]
+        })
+        df = pd.concat([df, new_row], ignore_index=True)
+        return df
+        
 
     def game_loop(self):
-        #TODO: Create agent
         agent = Agent(gamma=0.99, epsilon=1, eps_end=0.05, eps_dec=5e-4, lr=0.001, 
-                              batch_size=64, n_actions=3, input_dims=[16,])
-        self.n_games = 5000
+                              batch_size=64, n_actions=3, input_dims=[18,])
+        self.n_games = 500
         self.scores, self.eps_history = [], []
         for episode in range(1, self.n_games):
             self.game = True
@@ -194,12 +199,6 @@ class Game():
                     if event.type == pygame.QUIT:
                         quit()
                 if not self.finish:
-                    self.getObjectsPos()
-                    self.reward = 0
-                    #TODO: Action created by an agent
-                    self.action = agent.choose_action(self.observation)
-
-
                     # Render fonts
                     self.record_score = self.font.render(f'Record: {self.record_score_points}', True, (255, 232, 31))
                     self.score = self.font.render(f'Score: {self.score_points}', True, (255, 232, 31))
@@ -209,8 +208,10 @@ class Game():
                     self.window.blit(self.record_score, (10, 0))  # Record score label
                     self.window.blit(self.score, (10, 25))  # Score label
                     
-                    self.ship.update(self.action, self.bullets)
-                    self.ship.update(self.action, self.bullets)
+                    # Making action
+                    self.reward = 0
+                    self.action = agent.choose_action(self.observation)
+
                     self.ship.update(self.action, self.bullets)
                     self.bullets.update()
                     self.aliens.update()
@@ -224,39 +225,33 @@ class Game():
                     for alien in self.aliens:
                         if alien.collisionBullet():
                             self.score_points += 1
-                            self.reward += 10
+                            self.reward += 100
 
                     # Losing
                     if self.alienCollision():
                         self.finish = True
-                        self.reward -= 10
+                        self.reward -= 1000
                         if self.score_points > self.record_score_points:
                             self.record_score_points = self.score_points
                             
 
                     self.observation_ = self.getObjectsPos()
-                    # print("---------------------------")
-                    # print(f"reward: {self.reward}")
-                    # print(f"action: {self.action}")
-                    # print(f"observation: {self.observation}")
-                    # print(f"observation_: {self.observation_}")
-                    # print(f"finish: {self.finish}")
                     agent.store_transition(self.observation, self.action, self.reward,
                                         self.observation_, self.finish)
                     agent.learn()
                     self.observation = self.observation_
                 else:
-                    self.scores.append(self.score_points)
-                    self.eps_history.append(agent.epsilon)
-
-                    print("Episode", episode, " | Score ", self.score_points, " | Epsilon %.2f " % agent.epsilon, " | Record ", self.record_score_points)
+                    # print("Episode", episode, " | Score ", self.score_points, " | Epsilon %.2f " % agent.epsilon, " | Record ", self.record_score_points)
+                    self.dataFrame = self.addGameDataToDataFrame(self.dataFrame, episode, self.score_points, 
+                                                            self.record_score_points, agent.epsilon, 
+                                                            agent.gamma, agent.lr)
+                    print(self.dataFrame)
                     self.score_points = 0
                     self.createAliens()
                     self.game=False 
                 pygame.display.update()
                 pygame.time.delay(40)
-        print("~~~~~~~~~~~~SCORES~~~~~~~~~~~~")
-        print(self.scores)
+
              
 GamePlay = Game()
 GamePlay.game_loop()
