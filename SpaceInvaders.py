@@ -1,5 +1,6 @@
 import pygame
 from random import randint
+import time
 from DQN import Agent
 import numpy as np
 import pandas as pd
@@ -151,7 +152,7 @@ class Game():
         self.observation = self.getObjectsPos()
         self.observation_ = self.getObjectsPos()
 
-        self.dataFrame = pd.DataFrame(columns=['Episode','Score', 'Record', 'Epsilon', 'Gamma', 'Alpha'])
+        self.dataFrame = pd.DataFrame(columns=['Episode','Score', 'Record', 'Epsilon', 'Gamma', 'Alpha', 'Duration(s)'])
 
     def createAgent(self, gamma, lr):
         self.agent = Agent(gamma, lr, epsilon=1,  eps_end=0.05, eps_dec=5e-4, 
@@ -186,20 +187,24 @@ class Game():
         self.window.blit(self.record_score, (10, 0))  # Record score label
         self.window.blit(self.score, (10, 25))  # Score label
             
-    def addToDataFrame(self, df, episode, score, record, epsilon, gamma, alpha):
+
+    def addToDataFrame(self, df, episode, score, record, epsilon, gamma, alpha, duration):
         new_row = pd.DataFrame({
             'Episode': [episode],
             'Score': [score],
             'Record': [record],
             'Epsilon': [epsilon],
             'Gamma': [gamma],
-            'Alpha': [alpha]
+            'Alpha': [alpha],
+            'Duration(s)': [duration]
         })
         df = pd.concat([df, new_row], ignore_index=True)
         return df
     
     def game_loop(self):
-        for episode in range(1, self.n_games):
+        startLearnTime = time.time()
+        for episode in range(1, self.n_games+1):
+            startEpisodeTime = time.time()
             self.game = True
             self.finish = False
             while self.game:  # Game loop
@@ -235,15 +240,19 @@ class Game():
                     self.agent.learn()
                     self.observation = self.observation_
                 else:
+                    endEpisodeTime = time.time()
+                    episodeDuration = endEpisodeTime - startEpisodeTime
                     self.dataFrame = self.addToDataFrame(self.dataFrame, episode, self.score_points, 
                                                             self.record_score_points, self.agent.epsilon, 
-                                                            self.agent.gamma, self.agent.lr)
+                                                            self.agent.gamma, self.agent.lr, episodeDuration)
                     print(self.dataFrame)
                     self.score_points = 0
                     self.createAliens()
                     self.game=False 
                 pygame.display.update()
                 pygame.time.delay(40)
+        endLearnTime = time.time()
+        learnDuration = endLearnTime - startLearnTime
 
              
 GamePlay = Game(500, 0.99, 0.001)
