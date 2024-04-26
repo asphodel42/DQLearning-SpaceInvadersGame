@@ -187,6 +187,7 @@ class Game():
         self.window.blit(self.record_score, (10, 0))  # Record score label
         self.window.blit(self.score, (10, 25))  # Score label
             
+
     def addToDataFrame(self, df, episode, score, record, epsilon, gamma, alpha, duration):
         new_row = pd.DataFrame({
             'Episode': [episode],
