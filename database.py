@@ -1,4 +1,5 @@
 import pymysql
+import pandas as pd
 
 def create_connection(host, user, password, database):
     try:
@@ -65,3 +66,16 @@ def insert_data(connection, episode, score, record, epsilon, gamma, alpha, durat
         print("Data inserted successfully.")
     except Exception as e:
         print("Error:", e)
+
+def addToDataFrame(df, episode, score, record, epsilon, gamma, alpha, duration):
+        new_row = pd.DataFrame({
+            'Episode': [episode],
+            'Score': [score],
+            'Record': [record],
+            'Epsilon': [epsilon],
+            'Gamma': [gamma],
+            'Alpha': [alpha],
+            'Duration(s)': [duration]
+        })
+        df = pd.concat([df, new_row], ignore_index=True)
+        return df

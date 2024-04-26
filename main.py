@@ -4,7 +4,7 @@ import time
 import numpy as np
 import pandas as pd
 from DQN import Agent
-from database import create_connection, create_database, create_table, insert_data 
+from database import create_connection, create_database, create_table, insert_data, addToDataFrame
 from SpaceInvaders import Player, Alien
 
 image_icon          = 'assets/background/icon.png'  # Icon
@@ -103,20 +103,6 @@ class Game():
         self.window.blit(self.background, (0,0))  # Background
         self.window.blit(self.record_score, (10, 0))  # Record score label
         self.window.blit(self.score, (10, 25))  # Score label
-            
-
-    def addToDataFrame(self, df, episode, score, record, epsilon, gamma, alpha, duration):
-        new_row = pd.DataFrame({
-            'Episode': [episode],
-            'Score': [score],
-            'Record': [record],
-            'Epsilon': [epsilon],
-            'Gamma': [gamma],
-            'Alpha': [alpha],
-            'Duration(s)': [duration]
-        })
-        df = pd.concat([df, new_row], ignore_index=True)
-        return df
     
     def game_loop(self):
         startLearnTime = time.time()
@@ -159,7 +145,7 @@ class Game():
                 else:
                     endEpisodeTime = time.time()
                     episodeDuration = endEpisodeTime - startEpisodeTime
-                    self.dataFrame = self.addToDataFrame(self.dataFrame, episode, self.score_points, 
+                    self.dataFrame = addToDataFrame(self.dataFrame, episode, self.score_points, 
                                                             self.record_score_points, self.agent.epsilon, 
                                                             self.agent.gamma, self.agent.lr, episodeDuration)
                     insert_data(self.connection, episode, self.score_points, self.record_score_points,
