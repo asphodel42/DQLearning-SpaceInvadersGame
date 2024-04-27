@@ -13,6 +13,9 @@ class GameSprite(pygame.sprite.Sprite):
         self.window_height = win_height
         self.window_width = win_width
 
+        self.width = width
+        self.height = height
+
         # Sprite object
         self.image = pygame.transform.scale(pygame.image.load(
             player_image), (width, height))  
@@ -25,7 +28,7 @@ class GameSprite(pygame.sprite.Sprite):
         self.rect.y = cord_y
 
     def getPos(self):
-        return [self.rect.centerx, self.rect.centery]
+        return [self.rect.left, self.rect.left+self.width, self.rect.top, self.rect.top+self.height]
 
     # Draw a sprite 
     def reset(self):
@@ -79,7 +82,7 @@ class Alien(GameSprite):
         self.rect.y += self.speed
 
     def updateMove(self):
-        if self.rect.y > self.window_height or self.collissionShip(self.ship):
+        if self.collissionShip(self.ship):
             return True
     
     def collisionBullet(self):
