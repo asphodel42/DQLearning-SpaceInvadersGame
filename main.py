@@ -3,8 +3,9 @@ from random import randint
 import time
 import numpy as np
 import pandas as pd
+import asyncio
 from DQN import Agent
-from database import create_connection, create_database, create_table, insert_data, addToDataFrame
+from database import create_connection, create_database, create_table, insert_data, addToDataFrame, createPlot
 from SpaceInvaders import Player, Alien
 
 image_icon          = 'assets/background/icon.png'  # Icon
@@ -69,7 +70,8 @@ class Game():
         self.observation = self.getObjectsPos()
         self.observation_ = self.getObjectsPos()
 
-        self.dataFrame = pd.DataFrame(columns=['Episode','Score', 'Record', 'Epsilon', 'Gamma', 'Alpha', 'Duration(s)'])
+        self.dataFrame = pd.DataFrame(columns=['Episode','Score', 'Mean', 'Record', 
+                                               'Epsilon', 'Gamma', 'Alpha', 'Duration(s)'])
 
     def createAgent(self, gamma, lr):
         self.agent = Agent(gamma, lr, epsilon=1,  eps_end=0.05, eps_dec=5e-4, 
@@ -106,6 +108,7 @@ class Game():
     
     def game_loop(self):
         startLearnTime = time.time()
+        
         for episode in range(1, self.n_games+1):
             startEpisodeTime = time.time()
             self.game = True
@@ -150,6 +153,7 @@ class Game():
                                                             self.agent.gamma, self.agent.lr, episodeDuration)
                     insert_data(self.connection, episode, self.score_points, self.record_score_points,
                                      self.agent.epsilon, self.agent.gamma, self.agent.lr, episodeDuration)
+                    createPlot('QLearning.png', self.dataFrame["Score"].to_list(), self.dataFrame["Mean"].to_list())
                     self.score_points = 0
                     self.createAliens()
                     self.game=False 

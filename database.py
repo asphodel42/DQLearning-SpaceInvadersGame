@@ -1,5 +1,7 @@
 import pymysql
 import pandas as pd
+import matplotlib.pyplot as plt
+from IPython import display
 
 def create_connection(host, user, password, database):
     try:
@@ -68,9 +70,11 @@ def insert_data(connection, episode, score, record, epsilon, gamma, alpha, durat
         print("Error:", e)
 
 def addToDataFrame(df, episode, score, record, epsilon, gamma, alpha, duration):
+        mean = df["Score"].mean()
         new_row = pd.DataFrame({
             'Episode': [episode],
             'Score': [score],
+            "Mean": [mean],
             'Record': [record],
             'Epsilon': [epsilon],
             'Gamma': [gamma],
@@ -79,3 +83,19 @@ def addToDataFrame(df, episode, score, record, epsilon, gamma, alpha, duration):
         })
         df = pd.concat([df, new_row], ignore_index=True)
         return df
+
+def createPlot(filename, scores, mean_scores):
+    display.clear_output(wait=True)
+    display.display(plt.gcf())
+    plt.clf()
+    plt.title('DQLearning...')
+    plt.xlabel('Number of Games')
+    plt.ylabel('Score')
+    plt.plot(scores)
+    plt.plot(mean_scores)
+    plt.ylim(ymin=0)
+    plt.text(len(scores)-1, scores[-1], str(scores[-1]))
+    plt.text(len(mean_scores)-1, mean_scores[-1], str(mean_scores[-1]))
+    plt.show(block=False)
+    plt.savefig(filename)
+    plt.pause(.1)
