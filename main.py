@@ -153,7 +153,8 @@ class Game():
                                                             self.agent.gamma, self.agent.lr, episodeDuration)
                     insert_data(self.connection, episode, self.score_points, self.record_score_points,
                                      self.agent.epsilon, self.agent.gamma, self.agent.lr, episodeDuration)
-                    createPlot('QLearning.png', self.dataFrame["Score"].to_list(), self.dataFrame["Mean"].to_list())
+                    createPlot('QLearning.png', self.dataFrame["Episode"], self.dataFrame["Score"],
+                                self.dataFrame["Mean"])
                     self.score_points = 0
                     self.createAliens()
                     self.game=False 
@@ -163,5 +164,5 @@ class Game():
         learnDuration = endLearnTime - startLearnTime
 
 if __name__ == "__main__":      
-    GamePlay = Game(500, 0.99, 0.001)
+    GamePlay = Game(5000, 0.7, 0.2)
     GamePlay.game_loop()

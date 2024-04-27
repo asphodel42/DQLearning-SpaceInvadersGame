@@ -1,7 +1,6 @@
 import pymysql
 import pandas as pd
 import matplotlib.pyplot as plt
-from IPython import display
 
 def create_connection(host, user, password, database):
     try:
@@ -74,7 +73,7 @@ def addToDataFrame(df, episode, score, record, epsilon, gamma, alpha, duration):
         new_row = pd.DataFrame({
             'Episode': [episode],
             'Score': [score],
-            "Mean": [mean],
+            'Mean': [mean],
             'Record': [record],
             'Epsilon': [epsilon],
             'Gamma': [gamma],
@@ -84,18 +83,22 @@ def addToDataFrame(df, episode, score, record, epsilon, gamma, alpha, duration):
         df = pd.concat([df, new_row], ignore_index=True)
         return df
 
-def createPlot(filename, scores, mean_scores):
-    display.clear_output(wait=True)
-    display.display(plt.gcf())
-    plt.clf()
-    plt.title('DQLearning...')
-    plt.xlabel('Number of Games')
-    plt.ylabel('Score')
-    plt.plot(scores)
-    plt.plot(mean_scores)
-    plt.ylim(ymin=0)
-    plt.text(len(scores)-1, scores[-1], str(scores[-1]))
-    plt.text(len(mean_scores)-1, mean_scores[-1], str(mean_scores[-1]))
-    plt.show(block=False)
+def createPlot(filename, episode, score, mean):
+    # Створення графіка
+    fig, ax1 = plt.subplots()
+
+    # Побудова кривої для кількості набраних очок
+    color = 'tab:red'
+    ax1.set_xlabel('Games')
+    ax1.set_ylabel('Score', color=color)
+    ax1.plot(episode, score, color=color)
+    ax1.tick_params(axis='y', labelcolor=color)
+
+    # Створення другої осі для кривої epsilon
+    ax2 = ax1.twinx()
+    color = 'tab:orange'
+    ax2.set_ylabel('Mean', color=color)
+    ax2.plot(episode, mean, color=color)
+    ax2.tick_params(axis='y', labelcolor=color)
+
     plt.savefig(filename)
-    plt.pause(.1)
