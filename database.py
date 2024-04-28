@@ -1,7 +1,7 @@
 import pymysql
 import pandas as pd
+import seaborn as sns
 import matplotlib.pyplot as plt
-import numpy as np
 
 def create_connection(host, user, password, database):
     try:
@@ -67,6 +67,24 @@ def insert_data(connection, table, episode, score, record, epsilon, gamma, alpha
     except Exception as e:
         print("Error:", e)
 
+def fetch_data_to_dataframe(connection, table):
+    try:
+        # Створення курсора
+        with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+            # Виконання SQL-запиту для вибору всіх даних з таблиці
+            sql_query = f"SELECT * FROM {table}"
+            cursor.execute(sql_query)
+            # Отримання результатів запиту
+            result = cursor.fetchall()
+            # Створення pandas DataFrame з результатами запиту
+            df = pd.DataFrame(result)
+            return df
+    except Exception as e:
+        print("Error:", e)
+    finally:
+        # Закриття з'єднання з базою даних
+        connection.close()
+
 def addToDataFrame(df, episode, score, record, epsilon, gamma, alpha, duration):
         mean = df["Score"].mean()
         new_row = pd.DataFrame({
@@ -101,36 +119,19 @@ def createPlot(episode, score, mean, filename):
     plt.savefig(filename)
     plt.close()
 
-# def createPlot(x, scores, mean, filename, lines=None):
-#     fig=plt.figure()
-#     ax=fig.add_subplot(111, label="1")
-#     ax2=fig.add_subplot(111, label="2", frame_on=False)
+def createCorrelationMatrix(dataframe, filename, show=False):
+    correlation_matrix = dataframe.corr() 
+    plt.figure(figsize=(10, 8))
+    # Побудова теплової карти
+    sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt=".2f")
+    # Додавання заголовка до графіку
+    plt.title('Correlation Matrix')
+    # Відображення графіку
+    plt.savefig(filename)
+    if show: plt.show()
 
-#     ax.plot(x, scores, color="C0")
-#     ax.set_xlabel("Game", color="C0")
-#     ax.set_ylabel("Score", color="C0")
-#     ax.tick_params(axis='x', colors="C0")
-#     ax.tick_params(axis='y', colors="C0")
-
-#     # N = len(scores)
-#     # running_avg = np.empty(N)
-#     # for t in range(N):
-#     #     running_avg[t] = np.mean(scores[max(0, t-20):(t+1)])
-
-#     ax2.plot(x, mean, color="C1")
-#     #ax2.xaxis.tick_top()
-#     ax2.axes.get_xaxis().set_visible(False)
-#     ax2.yaxis.tick_right()
-#     #ax2.set_xlabel('x label 2', color="C1")
-#     ax2.set_ylabel('Mean', color="C1")
-#     #ax2.xaxis.set_label_position('top')
-#     ax2.yaxis.set_label_position('right')
-#     #ax2.tick_params(axis='x', colors="C1")
-#     ax2.tick_params(axis='y', colors="C1")
-
-#     if lines is not None:
-#         for line in lines:
-#             plt.axvline(x=line)
-
-#     plt.savefig(filename)
-#     plt.close()
+def createScatterMatrix(dataframe, filename, show=False):
+    plt.title('Scatter Matrix')
+    pd.plotting.scatter_matrix(dataframe, figsize=(10, 10))
+    plt.savefig(filename)
+    if show: plt.show()
