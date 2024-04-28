@@ -1,5 +1,3 @@
-import pandas as pd
-import matplotlib.pyplot as plt
 from database import create_connection, fetch_data_to_dataframe, createScatterMatrix, createCorrelationMatrix
 
 # Connection parameters
