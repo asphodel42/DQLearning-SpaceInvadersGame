@@ -48,12 +48,12 @@ class Player(GameSprite):
         # keys = pygame.key.get_pressed()
         if action == 0 and self.rect.x > 5:
             self.rect.x -= self.speed
-        if action == 1 and self.rect.x < self.window_width - 105:
+        if action == 1 and self.rect.x < self.window_width - 60:
             self.rect.x += self.speed
         if action == 2:
             self.current_time = pygame.time.get_ticks()
             # We're ready to fire when 300 ms have passed.
-            if abs(self.current_time - self.previous_time) > 300:
+            if abs(self.current_time - self.previous_time) > 100:
                 bullets.add(self.fire())
                 self.previous_time = self.current_time 
                
