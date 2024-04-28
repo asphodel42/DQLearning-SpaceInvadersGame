@@ -15,13 +15,14 @@ image_alien         = 'assets/sprites/alien.png'  # Enemy
 image_bullet        = 'assets/sprites/laser.png'  # Bullets
   
 class Game():
-    def __init__(self, num_games, gamma, lr, tablename):
+    def __init__(self, num_games, gamma, lr, tablename, filename):
         # Connection to database
         host = 'localhost'
         user = 'root'
         password = '0000'
         database = 'dql_data'
         self.tablename = tablename
+        self.filename = filename
 
         create_database(host, user, password, database)
         self.connection = create_connection(host, user, password, database)
@@ -75,10 +76,10 @@ class Game():
 
     def createAgent(self, gamma, lr):
         self.agent = Agent(gamma, lr, epsilon=1,  eps_end=0.05, eps_dec=5e-4, 
-                              batch_size=64, n_actions=3, input_dims=[36,])
+                              batch_size=64, n_actions=3, input_dims=[44,])
   
     def getObjectsPos(self):
-        cordArray = np.zeros(2 * 18, dtype=np.float32)
+        cordArray = np.zeros(2 * 22, dtype=np.float32)
         cordArray[0], cordArray[1], cordArray[2], cordArray[3] = self.ship.getPos()
         index = 4
         for alien in self.aliens:
@@ -160,7 +161,7 @@ class Game():
                     insert_data(self.connection, self.tablename, episode, self.score_points, self.record_score_points,
                                      self.agent.epsilon, self.agent.gamma, self.agent.lr, episodeDuration)
                     createPlot(self.dataFrame["Episode"].to_list(), self.dataFrame["Score"].to_list(),
-                                self.dataFrame["Mean"].to_list(), 'DQLearning.png',)
+                                self.dataFrame["Mean"].to_list(), self.filename)
                     self.score_points = 0
                     self.createAliens()
                     self.game=False 
@@ -170,5 +171,5 @@ class Game():
         learnDuration = endLearnTime - startLearnTime
 
 if __name__ == "__main__":      
-    GamePlay = Game(5000, 0.99, 0.001, 'game_dat_test2')
+    GamePlay = Game(5000, 0.8, 0.2, 'game_dat_08_02', 'DQLearning0802.jpg')
     GamePlay.game_loop()
