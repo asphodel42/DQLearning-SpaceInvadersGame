@@ -30,6 +30,7 @@ class Game():
 
         # Vars
         self.score_points = 0
+        self.mean = 0
         self.record_score_points = 0
         self.reward = 0
         self.n_games = num_games
@@ -76,10 +77,10 @@ class Game():
 
     def createAgent(self, gamma, lr):
         self.agent = Agent(gamma, lr, epsilon=1,  eps_end=0.05, eps_dec=5e-4, 
-                              batch_size=64, n_actions=3, input_dims=[44,])
+                              batch_size=64, n_actions=3, input_dims=[52,])
   
     def getObjectsPos(self):
-        cordArray = np.zeros(2 * 22, dtype=np.float32)
+        cordArray = np.zeros(2 * 26, dtype=np.float32)
         cordArray[0], cordArray[1], cordArray[2], cordArray[3] = self.ship.getPos()
         index = 4
         for alien in self.aliens:
@@ -158,8 +159,10 @@ class Game():
                     self.dataFrame = addToDataFrame(self.dataFrame, episode, self.score_points, 
                                                             self.record_score_points, self.agent.epsilon, 
                                                             self.agent.gamma, self.agent.lr, episodeDuration)
-                    insert_data(self.connection, self.tablename, episode, self.score_points, self.record_score_points,
-                                     self.agent.epsilon, self.agent.gamma, self.agent.lr, episodeDuration)
+                    self.mean = self.dataFrame.at[episode-1, "Mean"]
+                    insert_data(self.connection, self.tablename, episode, self.score_points, self.mean,
+                                self.record_score_points, self.agent.epsilon, self.agent.gamma, 
+                                self.agent.lr, episodeDuration)
                     createPlot(self.dataFrame["Episode"].to_list(), self.dataFrame["Score"].to_list(),
                                 self.dataFrame["Mean"].to_list(), self.filename)
                     self.score_points = 0
@@ -171,5 +174,5 @@ class Game():
         learnDuration = endLearnTime - startLearnTime
 
 if __name__ == "__main__":      
-    GamePlay = Game(5000, 0.8, 0.2, 'game_dat_08_02', 'statistics\graphs\DQLearning0802.jpg')
+    GamePlay = Game(5000, 0.99, 0.001, 'test', 'statistics/graphs/test.jpg')
     GamePlay.game_loop()
