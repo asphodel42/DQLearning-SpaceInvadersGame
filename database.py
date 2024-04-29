@@ -38,6 +38,7 @@ def create_table(connection, table):
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     episode INT,
                     score INT,
+                    mean FLOAT,
                     record INT,
                     epsilon FLOAT,
                     gamma FLOAT,
@@ -53,14 +54,16 @@ def create_table(connection, table):
         print("Error:", e)
 
 
-def insert_data(connection, table, episode, score, record, epsilon, gamma, alpha, duration):
+def insert_data(connection, table, episode, score, mean, record, epsilon, gamma, alpha, duration):
+    if pd.isna(mean):
+        mean = 0
     try:
         with connection.cursor() as cursor:
             cursor.execute(f"""
-                INSERT INTO {table} (episode, score, record, epsilon, 
+                INSERT INTO {table} (episode, score, mean, record, epsilon, 
                            gamma, alpha, gammaAlpha, alphaGamma, duration)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (episode, score, record, epsilon, gamma, alpha,
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (episode, score, mean, record, epsilon, gamma, alpha,
                   gamma/alpha, alpha/gamma, duration))
         connection.commit()
         print("Data inserted successfully.")
@@ -131,7 +134,12 @@ def createCorrelationMatrix(dataframe, filename, show=False):
     if show: plt.show()
 
 def createScatterMatrix(dataframe, filename, show=False):
-    plt.title('Scatter Matrix')
-    pd.plotting.scatter_matrix(dataframe, figsize=(10, 10))
+    # pd.plotting.scatter_matrix(dataframe, figsize=(10, 10))
+    # sns.pairplot(dataframe)
+    # plt.title('Scatter Matrix')
+    sns.scatterplot(x='episode', y='duration', data=dataframe)
+    plt.xlabel('game')
+    plt.ylabel('score')
+    plt.title('Scatter Plot')
     plt.savefig(filename)
     if show: plt.show()
