@@ -40,7 +40,7 @@ class DeepQNetwork(nn.Module):
 
 class Agent:
     def __init__(self, gamma, lr, epsilon, input_dims, batch_size, n_actions,
-                 max_mem_size=1000000, eps_end=0.05, eps_dec=5e-4):
+                 max_mem_size=100000, eps_end=0.01, eps_dec=5e-4):
         self.gamma = gamma
         self.epsilon = epsilon
         self.eps_min = eps_end
@@ -55,7 +55,7 @@ class Agent:
 
         self.Q_eval = DeepQNetwork(lr, n_actions=n_actions,
                                    input_dims=input_dims,
-                                   layer1=128, layer2=256)
+                                   layer1=256, layer2=256)
         self.state_memory = np.zeros((self.mem_size, *input_dims),
                                      dtype=np.float32)
         self.new_state_memory = np.zeros((self.mem_size, *input_dims),
