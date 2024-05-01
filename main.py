@@ -93,7 +93,7 @@ class Game():
     
     def createAliens(self):
         for _ in range(1, 6):
-            alien = Alien(self.ship, self.bullets, self.window, self.window_height, self.window_width,
+            alien = Alien(self.bullets, self.window, self.window_height, self.window_width,
                             image_alien, randint(60, self.window_width-60), -40, 50, 50, randint(3, 6))
             self.aliens.add(alien)
 
@@ -140,7 +140,7 @@ class Game():
                             self.reward += 100
                             self.score = self.font.render(f'Score: {self.score_points}',
                                                            True, (255, 232, 31))
-                        elif alien.updateMove():
+                        elif alien.collissionShip(self.ship):
                             self.aliens.empty()
                             self.finish = True
                             self.reward -= 200
@@ -174,5 +174,5 @@ class Game():
         learnDuration = endLearnTime - startLearnTime
 
 if __name__ == "__main__":      
-    GamePlay = Game(5000, 0.99, 0.001, 'test', 'statistics/graphs/test.jpg')
+    GamePlay = Game(5000, 0.7, 0.0001, 'test', 'statistics/graphs/test.jpg')
     GamePlay.game_loop()
