@@ -65,11 +65,10 @@ class Player(GameSprite):
     
 
 class Alien(GameSprite):
-    def __init__(self, ship, bullets, window, win_height, win_width, 
+    def __init__(self, bullets, window, win_height, win_width, 
                  player_image, player_x, player_y, width, height, speed):
         super().__init__(window, win_height, win_width, 
                  player_image, player_x, player_y, width, height, speed)
-        self.ship = ship
         self.bullets = bullets
         self.pos_x = 0
         self.pos_y = 0
@@ -80,10 +79,6 @@ class Alien(GameSprite):
         
     def update(self):
         self.rect.y += self.speed
-
-    def updateMove(self):
-        if self.collissionShip(self.ship):
-            return True
     
     def collisionBullet(self):
         for bullet in self.bullets:
