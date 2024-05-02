@@ -174,5 +174,5 @@ class Game():
         learnDuration = endLearnTime - startLearnTime
 
 if __name__ == "__main__":      
-    GamePlay = Game(5000, 0.7, 0.0001, 'test', 'statistics/graphs/test.jpg')
+    GamePlay = Game(5000, 0.6, 0.0001, 'game_dat_06_00001', 'statistics/graphs/DQLearning06_00001.jpg')
     GamePlay.game_loop()
