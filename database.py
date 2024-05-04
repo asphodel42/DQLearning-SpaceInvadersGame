@@ -1,5 +1,6 @@
 import pymysql
 import pandas as pd
+from pandas.plotting import scatter_matrix
 import seaborn as sns
 import matplotlib.pyplot as plt
 
@@ -137,9 +138,12 @@ def createScatterMatrix(dataframe, filename, show=False):
     # pd.plotting.scatter_matrix(dataframe, figsize=(10, 10))
     # sns.pairplot(dataframe)
     # plt.title('Scatter Matrix')
-    sns.scatterplot(x='episode', y='duration', data=dataframe)
+
+    sns.scatterplot(x='episode', y='mean', alpha=0.6, data=dataframe)
+    sns.regplot(x='episode', y='mean', data=dataframe, scatter=False, color='black')
     plt.xlabel('game')
-    plt.ylabel('score')
+    plt.ylabel('mean score')
     plt.title('Scatter Plot')
     plt.savefig(filename)
+
     if show: plt.show()
