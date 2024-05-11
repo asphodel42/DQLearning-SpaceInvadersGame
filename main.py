@@ -70,7 +70,7 @@ class Game():
         self.createAgent(self.gamma, self.lr)
 
         self.observation = self.getObjectsPos()
-        self.observation_ = self.getObjectsPos()
+        self.new_observation = self.getObjectsPos()
 
         self.dataFrame = pd.DataFrame(columns=['Episode','Score', 'Mean', 'Record', 
                                                'Epsilon', 'Gamma', 'Alpha', 'Duration(s)'])
@@ -148,11 +148,11 @@ class Game():
                                 self.record_score_points = self.score_points
                                 self.record_score = self.font.render(f'Record: {self.record_score_points}',
                                                                     True, (255, 232, 31))
-                    self.observation_ = self.getObjectsPos()
+                    self.new_observation = self.getObjectsPos()
                     self.agent.store_transition(self.observation, self.action, self.reward,
-                                        self.observation_, self.finish)
+                                        self.new_observation, self.finish)
                     self.agent.learn()
-                    self.observation = self.observation_
+                    self.observation = self.new_observation
                 else:
                     endEpisodeTime = time.time()
                     episodeDuration = endEpisodeTime - startEpisodeTime

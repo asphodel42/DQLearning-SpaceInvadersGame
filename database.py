@@ -3,6 +3,7 @@ import pandas as pd
 from pandas.plotting import scatter_matrix
 import seaborn as sns
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 def create_connection(host, user, password, database):
     try:
@@ -104,6 +105,19 @@ def addToDataFrame(df, episode, score, record, epsilon, gamma, alpha, duration):
         df = pd.concat([df, new_row], ignore_index=True)
         return df
 
+def getDuration(connection, table, df):
+    df_ = fetch_data_to_dataframe(connection, table)
+    learningDuration = df_['duration'].mean()
+    alpha_value = df_.at[0, 'alpha'] 
+    gamma_value = df_.at[0, 'gamma']  
+
+    # Create a DataFrame with the calculated values
+    new_df = pd.DataFrame({'alpha': [alpha_value],
+                            'gamma': [gamma_value],
+                            'duration': [learningDuration]})
+    df = pd.concat([df, new_df], ignore_index=True)
+    return df
+
 def createPlot(episode, score, mean, filename):
     fig, ax1 = plt.subplots()
 
@@ -147,3 +161,15 @@ def createScatterMatrix(dataframe, filename, show=False):
     plt.savefig(filename)
 
     if show: plt.show()
+
+def create3DGraph(df):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    
+    ax.plot_trisurf(df['alpha'], df['gamma'], df['duration'], color='yellow')
+
+    ax.set_xlabel('Alpha')
+    ax.set_ylabel('Gamma')
+    ax.set_zlabel('Time')
+
+    plt.show()
